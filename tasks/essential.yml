@@ -1,0 +1,29 @@
+- name: Update packages (Debian-based)
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install essential packages
+  package:
+   name: "{{ packages }}"
+   state: latest
+
+- name: Disable SSH password auth
+  lineinfile:
+   dest: /etc/ssh/sshd_config
+   regexp: "^#PasswordAuthentication yes"
+   line: "PasswordAuthentication no"
+  register: sshd_config
+
+- name: Disable SSH root login
+  lineinfile:
+   dest: /etc/ssh/sshd_config
+   regexp: "^#PermitRootLogin yes"
+   line: "PermitRootLogin no"
+  register: sshd_config
+
+- name: Restart SSHD on cfg change
+  service:
+   name: sshd
+   state: restarted
+  when: sshd_config.changed
